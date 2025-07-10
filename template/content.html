@@ -1,0 +1,234 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    {# Home Page (if not logged in) #}
+    {% if page_type == 'home' %}
+        <h1>Hello, World!</h1>
+        <p>Selamat datang di aplikasi kami.</p>
+        <p>Kami adalah kelompok:</p>
+        <ul>
+            {% for member in team_members %}
+                <li>{{ member }}</li>
+            {% endfor %}
+        </ul>
+        <p>Silakan <a href="/login">Login</a> atau <a href="/register">Register</a> untuk melanjutkan.</p>
+
+    {# User Dashboard (if logged in) #}
+    {% elif page_type == 'user_dashboard' %}
+        <h1>Selamat datang, {{ username }}!</h1>
+        
+        <h2>Buat Post Baru</h2>
+        <form action="/post_message" method="post" enctype="multipart/form-data">
+            <textarea name="text_content" rows="3" cols="50" placeholder="Apa yang Anda pikirkan?" required></textarea><br>
+            <label for="image_upload">Upload Gambar (opsional):</label>
+            <input type="file" name="image" id="image_upload" accept="image/*"><br>
+            <button type="submit">Posting</button>
+        </form>
+
+        <h2>Postingan Anda</h2>
+        {% if posts %}
+            {% for post in posts %}
+                <div class="post-item">
+                    <p><strong>{{ username }}</strong> <small>@ {{ post.created_at }}</small></p>
+                    <p>{{ post.text_content }}</p>
+                    {% if post.image_filename %}
+                        <img src="/static/uploads/{{ post.image_filename }}" alt="Post Image">
+                    {% endif %}
+                    <p>
+                        <a href="/edit_post/{{ post.id }}">Edit</a> | 
+                        <a href="/delete_post/{{ post.id }}" onclick="return confirm('Yakin ingin menghapus postingan ini?')">Hapus</a>
+                    </p>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>Anda belum memiliki postingan. Yuk, buat yang pertama!</p>
+        {% endif %}
+
+    {# Register Page #}
+    {% elif page_type == 'register' %}
+        <h1>Registrasi Pengguna Baru</h1>
+        <form action="/register" method="post">
+            <label for="reg_username">Username:</label>
+            <input type="text" id="reg_username" name="username" required><br>
+            <label for="reg_password">Password:</label>
+            <input type="password" id="reg_password" name="password" required><br>
+            <label for="reg_email">Email:</label>
+            <input type="email" id="reg_email" name="email" required><br>
+            <button type="submit">Daftar</button>
+        </form>
+        <p>Sudah punya akun? <a href="/login">Login di sini</a>.</p>
+
+    {# Login Page #}
+    {% elif page_type == 'login' %}
+        <h1>Login</h1>
+        <form action="/login" method="post">
+            <label for="login_username">Username:</label>
+            <input type="text" id="login_username" name="username" required><br>
+            <label for="login_password">Password:</label>
+            <input type="password" id="login_password" name="password" required><br>
+            <button type="submit">Login</button>
+        </form>
+        <p>Belum punya akun? <a href="/register">Daftar di sini</a>.</p>
+
+    {# Edit Profile Page #}
+    {% elif page_type == 'edit_profile' %}
+        <h1>Edit Profil Anda</h1>
+        <form action="/update_profile" method="post">
+            <label for="profile_email">Email:</label>
+            <input type="email" id="profile_email" name="email" value="{{ user.email }}" required><br>
+            {# Anda bisa tambahkan input untuk username atau password di sini jika mau #}
+            <button type="submit">Simpan Perubahan</button>
+        </form>
+        <p><a href="/">Kembali ke Dashboard</a></p>
+
+    {# Edit Post Page #}
+    {% elif page_type == 'edit_post' %}
+        <h1>Edit Postingan</h1>
+        <form action="/update_post" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="post_id" value="{{ post.id }}">
+            <label for="edit_text_content">Isi Post:</label>
+            <textarea id="edit_text_content" name="text_content" rows="5" cols="50" required>{{ post.text_content }}</textarea><br>
+            
+            {% if post.image_filename %}
+                <p>Gambar saat ini:</p>
+                <img src="/static/uploads/{{ post.image_filename }}" alt="Current Image" style="max-width:200px;"><br>
+                <label for="delete_image">Hapus gambar ini?</label>
+                <input type="checkbox" id="delete_image" name="delete_current_image"><br>
+            {% else %}
+                <p>Tidak ada gambar saat ini.</p>
+            {% endif %}
+            
+            <label for="new_image">Ganti/Tambahkan Gambar Baru:</label>
+            <input type="file" id="new_image" name="new_image" accept="image/*"><br>
+            <button type="submit">Simpan Perubahan</button>
+        </form>
+        <p><a href="/">Batal</a></p>
+
+    {# Search Results Page #}
+    {% elif page_type == 'search_results' %}
+        <h1>Pencarian Postingan</h1>
+        <form action="/search" method="get">
+            <label for="search_keyword">Cari:</label>
+            <input type="text" id="search_keyword" name="keyword" value="{{ keyword }}" required>
+            <button type="submit">Cari</button>
+        </form>
+        <h2>Hasil Pencarian untuk "{{ keyword }}"</h2>
+        {% if results %}
+            {% for post in results %}
+                <div class="post-item">
+                    <p><strong>{{ post.username }}</strong> <small>@ {{ post.created_at }}</small></p>
+                    <p>{{ post.text_content }}</p>
+                    {% if post.image_filename %}
+                        <img src="/static/uploads/{{ post.image_filename }}" alt="Post Image">
+                    {% endif %}
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>Tidak ada hasil ditemukan.</p>
+        {% endif %}
+        <p><a href="/">Kembali ke Home</a></p>
+
+    {# User Profile View Page #}
+    {% elif page_type == 'user_profile_view' %}
+        <h1>Profil Pengguna: {{ profile_user.username }}</h1>
+        <p>Email: {{ profile_user.email }}</p>
+        <p>Bergabung sejak: {{ profile_user.created_at }}</p>
+
+        <h2>Postingan {{ profile_user.username }}</h2>
+        {% if posts %}
+            {% for post in posts %}
+                <div class="post-item">
+                    <p><strong>{{ profile_user.username }}</strong> <small>@ {{ post.created_at }}</small></p>
+                    <p>{{ post.text_content }}</p>
+                    {% if post.image_filename %}
+                        <img src="/static/uploads/{{ post.image_filename }}" alt="Post Image">
+                    {% endif %}
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>Pengguna ini belum memiliki postingan.</p>
+        {% endif %}
+        <p><a href="/">Kembali ke Home</a></p>
+
+    {# Admin Dashboard Page #}
+    {% elif page_type == 'admin_dashboard' %}
+        <h1>🔧 Admin Dashboard</h1>
+
+        <h2>📊 Statistik Post / Hari</h2>
+        <ul>
+            {% for s in post_stats %}
+                <li>{{ s.date }}: {{ s.count }} post</li>
+            {% endfor %}
+        </ul>
+
+        <h2>👥 Daftar Pengguna</h2>
+        <table border='1'>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Created At</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                    <tr>
+                        <td>{{ user.id }}</td>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.email if user.email else '-' }}</td> {# Handle jika email kosong #}
+                        <td>{{ user.role }}</td>
+                        <td>{{ user.created_at }}</td>
+                        <td>
+                            {% if user.id == session.user_id %}
+                                <span style="color: grey;">(Tidak bisa hapus diri sendiri)</span>
+                            {% else %}
+                                <a href='/admin/delete_user?user_id={{ user.id }}' 
+                                onclick="return confirm('Hapus user {{ user.username }} beserta semua postingannya?')">Hapus</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h2>📝 Daftar Postingan</h2>
+        <table border='1'>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>User</th>
+                    <th>Pesan</th>
+                    <th>Gambar</th>
+                    <th>Waktu</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for post in posts %}
+                    <tr>
+                        <td>{{ post.id }}</td>
+                        <td>{{ post.username }}</td>
+                        <td>{{ post.text_content }}</td>
+                        <td>
+                            {% if post.image_filename %}
+                                <img src="/static/uploads/{{ post.image_filename }}" alt="Post Image" width="100">
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>{{ post.created_at }}</td>
+                        <td>
+                            <a href='/admin/delete_post?post_id={{ post.id }}' 
+                            onclick="return confirm('Hapus post ini?')">Hapus</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <p><a href="/">Kembali ke Home</a></p>
+
+    {% endif %}
+{% endblock %}

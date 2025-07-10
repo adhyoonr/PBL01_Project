@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Aplikasi Post Sederhana{% endblock %}</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="/">Home</a></li>
+                {% if session.get('user_id') %}
+                    <li><a href="/post_message">Buat Post</a></li>
+                    <li><a href="/profile/{{ session.username }}">Profil Saya</a></li>
+                    <li><a href="/edit_profile">Edit Profil</a></li>
+                    <li><a href="/search">Cari Post</a></li>
+                    {% if session.get('role') == 'admin' %}
+                        <li><a href="/admin/">Admin Dashboard</a></li> {# URL ke Admin sub-aplikasi #}
+                    {% endif %}
+                    <li><a href="/logout">Logout ({{ session.username }})</a></li>
+                {% else %}
+                    <li><a href="/login">Login</a></li>
+                    <li><a href="/register">Register</a></li>
+                    <li><a href="/search">Cari Post</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        {# Flash Messages #}
+        {% if request.flash %}
+            <div class="alert alert-{{ request.flash.category }}">
+                {{ request.flash.message }}
+            </div>
+        {% endif %}
+
+        {# Ini adalah blok utama di mana konten dari content.html akan disisipkan #}
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <p>&copy; 2023 Kelompok Anda. Semua Hak Cipta Dilindungi.</p>
+    </footer>
+    <script src="/static/js/script.js"></script> {# Opsional: file JS #}
+</body>
+</html>
