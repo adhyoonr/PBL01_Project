@@ -88,15 +88,15 @@ class Root:
                                    flash_message=flash_message)
         else:
             team_members = [
-    "Muhammad Aldhyo Nur Arif (231080200050)",
-    "Muhammad Raihan Firdaus (231080200025)",
-    "Revangga Daffa Jala Putra (23080200117)",
-    "Donni Adeleo Ardana (231080200055)",
-    "Hamdani Bagus Pradana (231080200095)",
-    "Candra Dwi Prayogi (231080200089)",
-    "Ricky Firmansyah (231080200072)",
-    "Ryan Danuarta (231080200110)",
-    "Ahmad Isvander Adhi Saputra (231080200060)"
+    "Muhammad Aldhyo Nur Arif ",
+    "Muhammad Raihan Firdaus ",
+    "Revangga Daffa Jala Putra ",
+    "Donni Adeleo Ardana ",
+    "Hamdani Bagus Pradana ",
+    "Candra Dwi Prayogi ",
+    "Ricky Firmansyah ",
+    "Ryan Danuarta ",
+    "Ahmad Isvander Adhi Saputra "
 ]
 
         return render_template('content.html', 
