@@ -87,11 +87,23 @@ class Root:
                                    posts=user_posts, 
                                    flash_message=flash_message)
         else:
-            team_members = ["Nama Anggota 1", "Nama Anggota 2", "Nama Anggota 3"] # Ganti dengan nama anggota Anda
-            return render_template('content.html', 
-                                   page_type='home', 
-                                   team_members=team_members, 
-                                   flash_message=flash_message)
+            team_members = [
+    "Muhammad Aldhyo Nur Arif (231080200050)",
+    "Muhammad Raihan Firdaus (231080200025)",
+    "Revangga Daffa Jala Putra (23080200117)",
+    "Donni Adeleo Ardana (231080200055)",
+    "Hamdani Bagus Pradana (231080200095)",
+    "Candra Dwi Prayogi (231080200089)",
+    "Ricky Firmansyah (231080200072)",
+    "Ryan Danuarta (231080200110)",
+    "Ahmad Isvander Adhi Saputra (231080200060)"
+]
+
+        return render_template('content.html', 
+                               page_type='home', 
+                               team_members=team_members, 
+                               flash_message=flash_message)
+
 
     # Route untuk halaman registrasi
     @cherrypy.expose
