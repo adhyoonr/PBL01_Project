@@ -5,6 +5,7 @@ import uuid
 import datetime
 from jinja2 import Environment, FileSystemLoader
 from werkzeug.security import generate_password_hash, check_password_hash # Untuk hashing password
+import sqlite3 # Import sqlite3 untuk menangani IntegrityError
 
 # Import fungsi DB dari db.py
 from db import (
@@ -99,35 +100,59 @@ class Root:
     "Ahmad Isvander Adhi Saputra "
 ]
 
-        return render_template('content.html', 
-                               page_type='home', 
-                               team_members=team_members, 
-                               flash_message=flash_message)
+            return render_template('content.html', 
+                                   page_type='home', 
+                                   team_members=team_members, 
+                                   flash_message=flash_message)
 
 
     # Route untuk halaman registrasi
     @cherrypy.expose
     def register(self, username=None, password=None, email=None):
         flash_message = cherrypy.request.flash
+        print(f"--- Register Function Called ---") # Debug point 1
+        print(f"Flash message on entry: {flash_message}") # Debug point 2
+
         if cherrypy.request.method == 'POST':
+            print(f"Request method is POST. Data: username={username}, email={email}") # Debug point 3
+
             if not username or not password or not email:
+                print("Validation failed: fields are empty.") # Debug point 4
                 cherrypy.session['flash'] = {'message': 'Semua field harus diisi.', 'category': 'danger'}
                 raise cherrypy.HTTPRedirect('/register') # <--- Redirect jika field kosong
             
-            # Ini yang paling mungkin terjadi:
+            # Cek duplikasi username (diperbaiki untuk kejelasan)
             if get_user_by_username(username):
+                print(f"Validation failed: Username '{username}' already exists.") # Debug point 5
                 cherrypy.session['flash'] = {'message': 'Username sudah digunakan.', 'category': 'danger'}
                 raise cherrypy.HTTPRedirect('/register') # <--- Redirect jika username duplikat
             
             try:
                 hashed_password = generate_password_hash(password)
+                print(f"Attempting to add user '{username}' to DB...") # Debug point 6
                 add_user(username, hashed_password, email, 'user')
+                print(f"User '{username}' successfully added to DB.") # Debug point 7
                 cherrypy.session['flash'] = {'message': 'Registrasi berhasil! Silakan login.', 'category': 'success'}
+                print("Setting success flash message and redirecting to /login.") # Debug point 8
                 raise cherrypy.HTTPRedirect('/login') # <--- Redirect jika sukses
-            except Exception as e:
-                cherrypy.session['flash'] = {'message': f'Registrasi gagal: {e}', 'category': 'danger'}
-                raise cherrypy.HTTPRedirect('/register') # <--- Redirect jika ada error DB lain
+            except sqlite3.IntegrityError as e: # <-- Menangkap error duplikat dari DB (lebih spesifik)
+                print(f"Database Integrity Error during registration: {e}")
+                if "UNIQUE constraint failed: users.email" in str(e):
+                    cherrypy.session['flash'] = {'message': 'Email sudah digunakan.', 'category': 'danger'}
+                else: # Fallback for other integrity errors, e.g., username if somehow not caught before
+                    cherrypy.session['flash'] = {'message': 'Registrasi gagal: Username atau Email sudah digunakan.', 'category': 'danger'}
+                raise cherrypy.HTTPRedirect('/register')
+            except cherrypy.HTTPRedirect: # Jika ada redirect internal CherryPy, biarkan saja
+                raise
+            except Exception as e: # <-- Menangkap error umum lainnya
+                print(f"An unexpected error occurred during registration: {e}") # Debug point 9
+                import traceback
+                traceback.print_exc() # Cetak traceback lengkap ke terminal
+                cherrypy.session['flash'] = {'message': f'Registrasi gagal karena kesalahan tak terduga: {e}', 'category': 'danger'}
+                print("Setting failure flash message and redirecting to /register.") # Debug point 10
+                raise cherrypy.HTTPRedirect('/register')
 
+        print("Rendering register form (GET request).") # Debug point 11
         return render_template('content.html', page_type='register', flash_message=flash_message)
 
     # Route untuk halaman login
